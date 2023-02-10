@@ -6,6 +6,7 @@ import lombok.val;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,6 +31,7 @@ public class GUI implements Listener {
     private Inventory i;
     private final ItemStack start = new ItemStack(Material.IRON_AXE);
     private final ItemStack ui = new ItemStack(Material.IRON_AXE);
+    private final ItemStack layout  = new ItemStack(Material.STAINED_GLASS_PANE);
     private ItemStack stack;
     private Player player;
     private UpgradeBase base;
@@ -40,6 +42,7 @@ public class GUI implements Listener {
 
     public GUI setupInv(Player player) {
         i = Bukkit.createInventory(player, 54, "강화");
+        ui.setDurability((short) 9);
         ItemMeta itemMeta = start.getItemMeta();
         itemMeta.setDisplayName(ChatColor.GREEN + "강화 시작");
         start.setItemMeta(itemMeta);
@@ -60,146 +63,372 @@ public class GUI implements Listener {
 
     @EventHandler
     public void onInvClick(InventoryClickEvent e) {
-        if (e.getInventory().getName().equalsIgnoreCase("강화") || e.getInventory().equals(i) ||
-                e.getInventory().contains(start)) {
-            if (e.getSlot() == 53) {
-                e.setCancelled(true);
-            }
-            Player p = (Player) e.getWhoClicked();
+        if (e.getClickedInventory() != null) {
+            if (e.getClickedInventory().getName().equalsIgnoreCase("강화") || e.getClickedInventory().equals(i) ||
+                    e.getClickedInventory().contains(start)) {
+                Player p = (Player) e.getWhoClicked();
 
-            try {
-                ItemStack weapon = e.getClickedInventory().getItem(4) == null ? new ItemStack(Material.AIR) : e.getClickedInventory().getItem(4);
-                if (e.getSlot() == 4) {
-                    stack = e.getInventory().getItem(4);
-                }
-                p.sendMessage("try catch문");
-                if (e.getSlot() == 22 || e.getSlot() == 23) {
+                if (e.getClick().isShiftClick() || e.getClick().isRightClick()) {
                     e.setCancelled(true);
-                    p.sendMessage("if문 1");
-                    if (!weapon.getType().equals(Material.AIR) || weapon.getType() != Material.AIR) {
-                        p.sendMessage("if문 2");
-                        Bukkit.getLogger().warning(YELLOW + p.getName() + "님이 강화를 시도함! (world=" + p.getWorld().getName() + ")");
-                        boolean checkSucuess = false;
-                        boolean breaked = false;
-                        boolean safed = false;
-                        p.sendMessage("if문 3-1");
-                        boolean inf = checkAir(i, 38);
-                        p.sendMessage("if문 3-2");
-                        Type type = checkAddPer(e.getClickedInventory().getItem(42));
-                        p.sendMessage("if문 3-3");
-                        addchancecmd: switch (type.getId()) {
-                            case 1:
-                                checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 0);
-                                break addchancecmd;
-                            case 2:
-                                checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 1);
-                                break addchancecmd;
-                            case 3:
-                                checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 5);
-                                break addchancecmd;
-                            case 4:
-                                checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 10);
-                                break addchancecmd;
-                            default:
-                                System.out.println("Unknow Process");
-                                p.sendMessage("42번칸 공기");
-                                break addchancecmd;
-                        }
-                        int damage = 0;
-                        p.sendMessage("if문 4");
-                        int up = 0;
-                        Type2 type2 = checkAddUpLevel(e.getInventory().getItem(42));
-                        switch (type2.getId()) {
-                            case 1:
-                                up = 0;
-                                breaked = WrapperRandom.INSTANCE.get10PerCheck();
-                                break;
-                            case 2:
-                                up = 5;
-                                breaked = WrapperRandom.INSTANCE.get10PerCheck();
-                                break;
-                            case 3:
-                                up = 10;
-                                breaked = WrapperRandom.INSTANCE.get10PerCheck();
-                                break;
-                            default:
-                                System.out.println("Unknow Process");
-                                break;
-                        }
-
-                        p.sendMessage("if문 5");
-                        if (breaked) {
-                            safed = WrapperRandom.INSTANCE.get15PerCheck();
-                        }
-                        p.sendMessage("if문 6");
-                        if (checkSucuess || inf) {
-                            p.sendMessage( ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 성공하였습니다");
-                            this.modfiy(weapon, damage, up, p);
-                            changeUpgradeButton(true);
-                            if (ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon) >= 10) {
-                                Main.addChatMessage(ChatColor.GREEN + p.getName() + "가" + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 성공하였습니다");
-                            }
-                        } else {
-                            if (breaked && up != 0 && !safed) {
-                                p.sendMessage( ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + p.getName() +  ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 파괴되었습니다");
-                            } else {
-                                p.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + p.getName() + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 실패하였습니다");
-                                changeUpgradeButton(false);
-                            }
-                        }
-                        p.sendMessage("if문 7");
-                    }
+                    return;
                 }
-            } catch (NullPointerException ex) {
-                System.out.println(ex.getMessage());
-                ex.getStackTrace();
+
+                try {
+                    ItemStack weapon = e.getClickedInventory().getItem(4) == null ? new ItemStack(Material.AIR) : e.getClickedInventory().getItem(4);
+                    if (e.getSlot() == 4) {
+                        stack = e.getInventory().getItem(4);
+                    }
+                    if (!(e.getSlot() == 22 || e.getSlot() == 42 || e.getSlot() == 4 || e.getSlot() == 31 || e.getSlot() == 38)) {
+                        e.setCancelled(true);
+                        return;
+                    }
+                    if (e.getSlot() == 22 || e.getSlot() == 23) {
+                        e.setCancelled(true);
+                        if (!weapon.getType().equals(Material.AIR) || weapon.getType() != Material.AIR) {
+                            Bukkit.getLogger().warning(YELLOW + p.getName() + "님이 강화를 시도함! (world=" + p.getWorld().getName() + ")");
+                            if (e.getClickedInventory().getItem(31) == null) {
+                                p.sendMessage(RED + "강화에 필요한 재료가 없습니다");
+                                return;
+                            }
+
+                            if (e.getClickedInventory().getItem(4).getItemMeta().getDisplayName().contains("30")) {
+                                p.sendMessage(GRAY + "30레벨이 넘어서 강화가 불가능합니다.");
+                                return;
+                            }
+
+                            ItemStack stack = e.getClickedInventory().getItem(31);
+                            stack.setAmount(e.getClickedInventory().getItem(31).getAmount() - 1);
+                            e.getClickedInventory().setItem(31, stack);
+                            boolean checkSucuess = false;
+                            boolean breaked = false;
+                            boolean safed = false;
+                            boolean inf = checkAir(i, 38);
+                            newInventory = UpgradeBase.inv.get(p.getUniqueId());
+                            Type type = checkAddPer(e.getClickedInventory().getItem(42));
+                            addchancecmd:
+                            switch (type.getId()) {
+                                case 1:
+                                    checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 0);
+                                    break addchancecmd;
+                                case 2:
+                                    checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 1);
+                                    break addchancecmd;
+                                case 3:
+                                    checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 5);
+                                    break addchancecmd;
+                                case 4:
+                                    checkSucuess = WrapperRandom.INSTANCE.isTrue(ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon), 10);
+                                    break addchancecmd;
+                                default:
+                                    System.out.println("Unknow Process");
+                                    p.sendMessage("42번칸 공기");
+                                    break addchancecmd;
+                            }
+                            int damage = 0;
+                            int up = 0;
+                            Type2 type2 = checkAddUpLevel(e.getInventory().getItem(42));
+                            switch (type2.getId()) {
+                                case 1:
+                                    up = 0;
+                                    breaked = WrapperRandom.INSTANCE.get10PerCheck();
+                                    break;
+                                case 2:
+                                    up = 5;
+                                    breaked = WrapperRandom.INSTANCE.get10PerCheck();
+                                    break;
+                                case 3:
+                                    up = 10;
+                                    breaked = WrapperRandom.INSTANCE.get10PerCheck();
+                                    break;
+                                default:
+                                    System.out.println("Unknow Process");
+                                    break;
+                            }
+
+                            if (breaked) {
+                                safed = WrapperRandom.INSTANCE.get15PerCheck();
+                            }
+                            if (checkSucuess) {
+                                p.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 성공하였습니다");
+                                p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 2, 1); //minecraft:block.enchantment_table.use
+                                this.modfiy(e.getClickedInventory().getItem(4), damage, up, p);
+                                changeUpgradeButton(p, true);
+                                if (ItemUpgradeLevelUtil.INSTANCE.findLevel(weapon) >= 10) {
+                                    Main.addChatMessage(ChatColor.GREEN + p.getName() + "가" + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 성공하였습니다");
+                                }
+                            } else {
+                                if (breaked && up != 0 && !safed) {
+                                    p.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + p.getName() + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 파괴되었습니다");
+                                    newInventory.setItem(4, new ItemStack(Material.AIR));
+                                } else { //entity.zombie.break_wooden_door
+                                    p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 2, 1);
+                                    p.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + "공지" + ChatColor.GRAY + "] " + p.getName() + ChatColor.GREEN + weapon.getItemMeta().getDisplayName() + "강화에 실패하였습니다");
+                                    changeUpgradeButton(p, false);
+                                }
+                            }
+                        }
+                    }
+                } catch (NullPointerException ex) {
+                    System.out.println(ex.getMessage());
+                    ex.getStackTrace();
+                    ex.getLocalizedMessage();
+                    ex.getSuppressed();
+                    ex.printStackTrace();
+                }
             }
         }
     }
 
     private boolean checkAir(Inventory inventory, int index) {
         try {
-            return inventory.getItem(index).getType() == Material.AIR || inventory.getItem(index).getType() == Material.AIR;
+            return !(inventory.getItem(index).getType() == Material.AIR || inventory.getItem(index).getType() == Material.AIR ||
+                    inventory.getItem(index).getType() == null);
         } catch (NullPointerException e) {
             e.getStackTrace();
         }
         return true;
     }
 
-    public void changeUpgradeButton(boolean sucuess) {
+    public void changeUpgradeButton(Player clicker, boolean sucuess) {
         if (sucuess) {
-            ui.setDurability((short) 11);
-            i.setItem(53, ui);
+            ui.setDurability((short) 13);
+            newInventory.setItem(53, ui);
+            clicker.openInventory(newInventory);
         } else {
-            ui.setDurability((short) 10);
-            i.setItem(53, ui);
+            ui.setDurability((short) 14);
+            newInventory.setItem(53, ui);
+            clicker.openInventory(newInventory);
         }
     }
 
-    public void modfiy(ItemStack item, int damages, @NotNull int up, Player p) {
-        int lvl = ItemUpgradeLevelUtil.INSTANCE.findLevel(item);
-        ItemMeta meta = item.getItemMeta();
+
+    public void modfiy(ItemStack item, boolean subdamage, @NotNull int up, Player p) {
+        if (checkLevel(item)) {
+            ItemMeta meta = item.getItemMeta();
+            int i = 0;
+            for (String str : item.getLore()) {
+                if (str.endsWith("보조공격력")) {
+                    continue;
+                }
+                if (str.endsWith("공격력")) {
+                    break;
+                }
+                i+=1;
+            }
+
+            List<String> nowLore = item.getLore();
+            String textLore = nowLore.get(i);
+            String damage = textLore.split(" ")[0];
+            damage = damage.substring(2);
+            int newDamage = (int) (Integer.parseInt(damage) * 1.2);
+            nowLore.set(i, GRAY + (newDamage + " 공격력"));
+            meta.setLore(nowLore);
+            item.setItemMeta(meta);
+            meta = item.getItemMeta();
+            meta = applyMeta(p, meta);
+            item.setItemMeta(meta);
+            newInventory.setItem(4, item);
+        }
+    }
+
+    private boolean checkLevel(ItemStack item) {
         int i = 0;
         for (String str : item.getLore()) {
-            if (str.startsWith("공격력")) {
-                break;
+            if (str.endsWith("레벨")) {
+                continue;
             }
             i+=1;
         }
 
-        List<String> nowLore = item.getLore();
-        String textLore = nowLore.get(i - 1);
-        String damage = textLore.split(" ")[1];
-        int newDamage = new Data(damage).getDamage() + damages;
-        nowLore.set(i - 1, GRAY + "공격력 " + newDamage);
-        meta.setLore(nowLore);
-        item.setItemMeta(meta);
-        ItemStack clonedStack = item.clone();
-        p.sendMessage(GREEN + "공격력 로어 위치 : " + i);
-        Inventory newInv = p.getOpenInventory().getTopInventory();
-        newInv.setItem(4, clonedStack);
-        p.closeInventory();
-        p.openInventory(newInv);
+        
+
+        return stack;
+    }
+
+    private Inventory newInventory;
+
+    private ItemMeta applyMeta(Player p, ItemMeta meta) {
+        if (meta.getDisplayName().contains("+10")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +11";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+11")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +12";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+12")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +13";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+13")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +14";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+14")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +15";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+15")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +16";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+16")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +17";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+17")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +18";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+18")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +19";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+19")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +20";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+20")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +21";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+21")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +22";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+22")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +23";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+23")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +24";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+24")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +25";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+25")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +26";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+26")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +27";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+27")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +28";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+28")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +29";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+29")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +30";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+30")) {
+            return meta;
+        } else if (meta.getDisplayName().contains("+1")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +2";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+2")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +3";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+3")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +4";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+4")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +5";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+5")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +6";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+6")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +7";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+7")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +8";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+8")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +9";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else if (meta.getDisplayName().contains("+9")) {
+            String beforedisplayName = meta.getDisplayName().split(" +")[0];
+            String afterdisplayName = meta.getDisplayName().split(" +")[1];
+            String displayName = beforedisplayName + " " + afterdisplayName + " +10";
+            meta.setDisplayName(displayName);
+            return meta;
+        } else {
+            String displayName = meta.getDisplayName() + " +1";
+            meta.setDisplayName(displayName);
+            return meta;
+        }
     }
 
     public enum Type {
@@ -251,11 +480,7 @@ public class GUI implements Listener {
     public void onInvClose(InventoryCloseEvent e) {
         if (e.getInventory().equals(i)) {
             Player p = (Player) e.getPlayer();
-            for (ItemStack inventory : p.getInventory()) {
-                inventory.setType(stack.getType());
-                inventory.setDurability(stack.getDurability());
-                inventory.setItemMeta(stack.getItemMeta());
-            }
+            p.getInventory().addItem(stack);
         }
     }
 }
