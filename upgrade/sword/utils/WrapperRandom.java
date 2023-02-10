@@ -1,29 +1,23 @@
 package upgrade.sword.utils;
 
-import org.bukkit.configuration.file.FileConfiguration;
-
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class WrapperRandom {
     public static final WrapperRandom INSTANCE = new WrapperRandom();
 
-    private static final Random r = new Random();
+    public static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
     public boolean isTrue(final int upgrade, int addchance) {
-        final Float f = new Float((100/(1.15 * ((1.15/2) * upgrade))) + addchance);
-        int chance = r.nextInt(101);
-        if (chance == 0) {
-            chance+=1;
-        }
-        if (f.intValue() >= chance) {
-            return true;
-        }
-        return false;
+        final double value = 100 - (upgrade * 3.3);
+        int chance = RANDOM.nextInt(100) + addchance;
+        System.out.println("value: " + value);
+        System.out.println("chance: " + chance);
+        return chance <= value;
     }
 
     public boolean get15PerCheck() {
         final int static_chance = 15;
-        int i = r.nextInt(101);
+        int i = RANDOM.nextInt(101);
         if (i == 0) {
             i++;
         }
@@ -35,7 +29,7 @@ public class WrapperRandom {
 
     public boolean get10PerCheck() {
         final int static_chance = 10;
-        int i = r.nextInt(101);
+        int i = RANDOM.nextInt(101);
         if (i == 0) {
             i++;
         }
